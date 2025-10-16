@@ -22,7 +22,7 @@ namespace Infrastructure.Repositories
         public async Task<ApplicationUser?> FindByEmailAsync(string email)
             => await _dbSet.FirstOrDefaultAsync(u => u.Email == email);
 
-        public bool CheckPasswordAsync(ApplicationUser user, string password)
+        public bool CheckPassword(ApplicationUser user, string password)
             => _passwordHasher.VerifyHashedPassword(user, user.PasswordHash!, password) == PasswordVerificationResult.Success;
 
         public async Task CreateAsync(ApplicationUser user, string password)

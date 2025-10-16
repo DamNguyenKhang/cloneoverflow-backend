@@ -11,7 +11,7 @@ namespace Domain.Interfaces
     {
         public Task<ApplicationUser?> FindByUserNameAsync(string username);
         public Task<ApplicationUser?> FindByEmailAsync(string email);
-        public bool CheckPasswordAsync(ApplicationUser user, string password);
+        public bool CheckPassword(ApplicationUser user, string password);
         public Task CreateAsync(ApplicationUser user, string password);
 
     }

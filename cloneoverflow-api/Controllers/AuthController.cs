@@ -6,51 +6,56 @@ using Domain;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace cloneoverflow_api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     public class AuthController : ControllerBase
     {
-        private readonly AuthService _authService;
-        private readonly IConfiguration _config;
+        private readonly IAuthService _authService;
+        private readonly ICookieService _cookieService;
+
+        private readonly JwtSettings _jwtSettings;
 
 
-        public AuthController(IConfiguration config, AuthService authService)
+        public AuthController(IAuthService authService, ICookieService cookieService, JwtSettings jwtSettings)
         {
-            _config = config;
             _authService = authService;
+            _cookieService = cookieService;
+
+            _jwtSettings = jwtSettings ?? throw new ArgumentNullException(nameof(jwtSettings));
         }
 
-        [HttpPost(Name = "login")]
+        [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDTO loginRequest)
         {
             AuthResponse res = await _authService.LoginAsync(loginRequest);
 
             if (res.IsSuccess)
             {
-                SetCookie("accessToken", res.AccessToken, int.Parse(_config["Jwt:AccessTokenExpireMinutes"]));
-                SetCookie("refreshToken", res.RefreshToken, int.Parse(_config["Jwt:RefreshTokenExpireDays"]) * 24 * 60);
+                _cookieService.SetCookie(Response, "accessToken", res.AccessToken, _jwtSettings.AccessTokenExpireMinutes);
+                _cookieService.SetCookie(Response, "refreshToken", res.RefreshToken, _jwtSettings.RefreshTokenExpireDays * 24 * 60);
 
-                return Ok();
+                return Ok(new { Success = true, Message = res.Message });
             }
-            return Unauthorized();
+            return Unauthorized(new { Success = false, Message = res.Message });
         }
 
-
-
-
-        private void SetCookie(string key, string value, int expireMinutes)
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterDTO registerRequest)
         {
-            Response.Cookies.Append(key, value, new CookieOptions
+            AuthResponse res = await _authService.RegisterAsync(registerRequest);
+
+            if (res.IsSuccess)
             {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddMinutes(expireMinutes),
-                Path = "/"
-            });
+                _cookieService.SetCookie(Response, "accessToken", res.AccessToken, _jwtSettings.AccessTokenExpireMinutes);
+                _cookieService.SetCookie(Response, "refreshToken", res.RefreshToken, _jwtSettings.RefreshTokenExpireDays * 24 * 60);
+
+                return Ok(new { Success = true, Message = res.Message });
+            }
+            return Unauthorized(new { Success = false, Message = res.Message });
         }
     }
 }

@@ -18,7 +18,7 @@ namespace Application.Services
 
         public async Task InitializeDefaultRolesAsync()
         {
-            string[] defaultRoles = { "Admin", "User", "Editor" }; // Các role mặc định
+            string[] defaultRoles = { "Admin", "User" }; // Các role mặc định
 
             foreach (var roleName in defaultRoles)
             {

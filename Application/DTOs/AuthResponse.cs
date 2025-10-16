@@ -8,9 +8,9 @@ namespace Application.DTOs
 {
     public class AuthResponse
     {
-        public String? AccessToken;
-        public String? RefreshToken;
-        public Boolean IsSuccess;
-        public String? Message;
+        public string? AccessToken { get; set; }
+        public string? RefreshToken { get; set; }
+        public bool IsSuccess { get; set; }
+        public string? Message { get; set; }
     }
 }
