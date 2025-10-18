@@ -3,6 +3,7 @@ using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace Infrastructure.AppDbContext
 {
@@ -12,16 +13,22 @@ namespace Infrastructure.AppDbContext
             : base(options)
         {
         }
-        public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<UserRefreshToken> RefreshTokens { get; set; }
+        
+        public DbSet<InvalidToken> InvalidTokens { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
-            builder.Entity<RefreshToken>()
+            builder.Entity<UserRefreshToken>()
                 .HasOne(rt => rt.User)
                 .WithMany()
                 .HasForeignKey(rt => rt.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            
+
         }
     }
 }

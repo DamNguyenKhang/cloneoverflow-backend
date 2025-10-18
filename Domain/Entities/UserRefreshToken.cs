@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Entities
 {
-    public class RefreshToken
+    public class UserRefreshToken
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public string RefreshTokenString { get; set; } = null!;
@@ -15,6 +15,8 @@ namespace Domain.Entities
         public string? ReplacedByToken { get; set; }
 
         public string UserId { get; set; } = null!;
-        public ApplicationUser User { get; set; } = null!;
+        public virtual ApplicationUser User { get; set; } = null!;
+        public bool IsExpired() => DateTime.UtcNow >= ExpiresAt;
+
     }
 }

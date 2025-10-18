@@ -9,7 +9,7 @@ namespace Application.Services
 {
     public interface ICookieService
     {
-        public void SetCookie(HttpResponse response, string key, string value, int expireMinutes);
+        public void SetCookie(HttpResponse response, string key, string value, DateTime expiredAt);
 
     }
 }

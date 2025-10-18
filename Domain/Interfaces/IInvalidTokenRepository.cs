@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace Domain.Interfaces
 {
-    public interface IRefreshTokenRepository : IGenericRepository<RefreshToken>
+    public interface IInvalidTokenRepository : IGenericRepository<InvalidToken>
     {
-
+        public Task InvalidAToken(string token);
     }
 }

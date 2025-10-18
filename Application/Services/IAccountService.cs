@@ -7,9 +7,11 @@ using System.Threading.Tasks;
 
 namespace Application.Services
 {
-    public interface IAuthService
+    public interface IAccountService
     {
         public Task<AuthResponse> LoginAsync(LoginDTO loginRequest);
         public Task<AuthResponse> RegisterAsync(RegisterDTO registerRequest);
+        public Task<TokenResponse> RefreshTokenAsync(string refreshTokenStr);
+
     }
 }

@@ -9,14 +9,14 @@ namespace Application.Services
 {
     public class CookieService : ICookieService
     {
-        public void SetCookie(HttpResponse response, string key, string value, int expireMinutes)
+        public void SetCookie(HttpResponse response, string key, string value, DateTime expiredAt)
         {
             response.Cookies.Append(key, value, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddMinutes(expireMinutes),
+                Expires = expiredAt
             });
         }
     }

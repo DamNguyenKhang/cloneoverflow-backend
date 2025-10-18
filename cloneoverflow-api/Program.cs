@@ -38,7 +38,7 @@ namespace cloneoverflow_api
 
             // Identity DB Context for injection
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")).UseLazyLoadingProxies());
 
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -107,11 +107,13 @@ namespace cloneoverflow_api
 
             // DI
             builder.Services.AddSingleton<JwtUtils>();
-            builder.Services.AddScoped<IAuthService, AuthService>();
-            builder.Services.AddScoped<IUserRepository, UserRepository>();
-            builder.Services.AddScoped<IRoleService, RoleService>();
+            builder.Services.AddScoped<IAccountService, AccountService>();
             builder.Services.AddScoped<ICookieService, CookieService>();
-            builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+            builder.Services.AddScoped<IRoleService, RoleService>();
+
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IUserRefreshTokenRepository, UserRefreshTokenRepository>();
+            builder.Services.AddScoped<IInvalidTokenRepository, InvalidTokenRepository>();
 
 
             builder.Logging.ClearProviders();
