@@ -113,7 +113,6 @@ namespace cloneoverflow_api
 
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IUserRefreshTokenRepository, UserRefreshTokenRepository>();
-            builder.Services.AddScoped<IInvalidTokenRepository, InvalidTokenRepository>();
 
 
             builder.Logging.ClearProviders();

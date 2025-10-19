@@ -71,5 +71,16 @@ namespace cloneoverflow_api.Controllers
 
         }
 
+        [HttpPost("logout")]
+        public async Task<IActionResult> LogOut()
+        {
+            var refreshTokenStr = Request.Cookies["refreshToken"];
+            bool res = await _accountService.LogOutAsync(refreshTokenStr);
+
+            _cookieService.SetCookie(Response, "accessToken", "", DateTime.UtcNow.AddMinutes(-1));
+            _cookieService.SetCookie(Response, "refreshToken", "", DateTime.UtcNow.AddMinutes(-1));
+
+            return Ok(new { Success = true, Message = "Logout successfully" });
+        }
     }
 }

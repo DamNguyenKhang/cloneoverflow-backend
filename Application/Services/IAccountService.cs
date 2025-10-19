@@ -12,6 +12,6 @@ namespace Application.Services
         public Task<AuthResponse> LoginAsync(LoginDTO loginRequest);
         public Task<AuthResponse> RegisterAsync(RegisterDTO registerRequest);
         public Task<TokenResponse> RefreshTokenAsync(string refreshTokenStr);
-
+        public Task<bool> LogOutAsync(string refreshTokenStr);
     }
 }

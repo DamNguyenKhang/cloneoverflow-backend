@@ -15,8 +15,6 @@ namespace Infrastructure.AppDbContext
         }
         public DbSet<UserRefreshToken> RefreshTokens { get; set; }
         
-        public DbSet<InvalidToken> InvalidTokens { get; set; }
-
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

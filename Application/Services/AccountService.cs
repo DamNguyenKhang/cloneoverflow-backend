@@ -22,7 +22,6 @@ namespace Application.Services
 
         private readonly IUserRepository _userRepository;
         private readonly IUserRefreshTokenRepository _refreshTokenRepository;
-        private readonly IInvalidTokenRepository _invalidTokenRepository;
 
 
         private readonly JwtUtils _jwtUtils;
@@ -33,7 +32,7 @@ namespace Application.Services
         private readonly SignInManager<ApplicationUser> _signInManager;
 
 
-        public AccountService(IUserRepository userRepository, JwtUtils jwtUtils, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IUserRefreshTokenRepository refreshTokenRepository, JwtSettings jwtSettings, ILogger<AccountService> logger, IInvalidTokenRepository invalidTokenRepository)
+        public AccountService(IUserRepository userRepository, JwtUtils jwtUtils, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IUserRefreshTokenRepository refreshTokenRepository, JwtSettings jwtSettings, ILogger<AccountService> logger)
         {
             _userRepository = userRepository;
             _jwtUtils = jwtUtils;
@@ -42,7 +41,6 @@ namespace Application.Services
             _refreshTokenRepository = refreshTokenRepository;
             _jwtSettings = jwtSettings;
             _logger = logger;
-            _invalidTokenRepository = invalidTokenRepository;
         }
 
         public async Task<AuthResponse> LoginAsync(LoginDTO loginRequest)
@@ -143,9 +141,6 @@ namespace Application.Services
 
             UserRefreshToken? userRefreshToken = await _refreshTokenRepository.GetByTokenStringAsync(refreshTokenStr);
 
-            _logger.LogInformation("Token: {}", userRefreshToken.ToString());
-
-
             if (userRefreshToken == null)
             {
                 UserRefreshToken? oldRefreshToken = await _refreshTokenRepository.GetByOldTokenStringAsync(refreshTokenStr);
@@ -174,11 +169,29 @@ namespace Application.Services
                 UserRefreshToken = userRefreshToken
             };
         }
+
+        public async Task<bool> LogOutAsync(string refreshTokenStr)
+        {
+
+            ArgumentNullException.ThrowIfNullOrEmpty(refreshTokenStr);
+
+            UserRefreshToken? userRefreshToken = await _refreshTokenRepository.GetByTokenStringAsync(refreshTokenStr);
+
+            if (userRefreshToken == null)
+            {
+                throw new EntityNotFoundException("Refresh token is not found");
+            }
+
+            await _refreshTokenRepository.Delete(userRefreshToken);
+
+            return await Task.FromResult(true);
+        }
+
         private async Task<AuthResponse> CreateSuccessfulAuthResponse(ApplicationUser user)
         {
             var userRoles = await _userManager.GetRolesAsync(user);
             var userRefreshToken = await AddUserRefreshTokenToDatabaseAsync(user);
-            
+
             return new AuthResponse
             {
                 IsSuccess = true,
