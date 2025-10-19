@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Interfaces
 {
-    public interface IUserRepository : IGenericRepository<ApplicationUser>
+    public interface IUserRepository : IGenericRepository<ApplicationUser, string>
     {
         public Task<ApplicationUser?> FindByUserNameAsync(string username);
         public Task<ApplicationUser?> FindByEmailAsync(string email);

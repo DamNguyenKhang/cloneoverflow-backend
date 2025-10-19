@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
-    public class UserRepository : GenericRepository<ApplicationUser>, IUserRepository
+    public class UserRepository : GenericRepository<ApplicationUser, string>, IUserRepository
     {
         private readonly IPasswordHasher<ApplicationUser> _passwordHasher;
 

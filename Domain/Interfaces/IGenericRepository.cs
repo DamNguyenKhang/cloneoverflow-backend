@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace Domain.Interfaces
 {
-    public interface IGenericRepository<T> where T : class
+    public interface IGenericRepository<T, TKey> where T : class, IEntity<TKey>
     {
         Task<IEnumerable<T>> FindAll();
-        Task<T?> FindByID(string id);
+        Task<T?> FindByID(TKey id);
         Task<T> Add(T entity);
         Task<T> Update(T entity);
         Task Delete(T entity);

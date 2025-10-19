@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace Infrastructure.Repositories
 {
 
-    public class UserRefreshTokenRepository : GenericRepository<UserRefreshToken>, IUserRefreshTokenRepository
+    public class UserRefreshTokenRepository : GenericRepository<UserRefreshToken, Guid>, IUserRefreshTokenRepository
     {
 
         public UserRefreshTokenRepository(ApplicationDbContext context) : base(context) { }

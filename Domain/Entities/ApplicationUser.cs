@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Domain.Interfaces;
+using Microsoft.AspNetCore.Identity;
 
 namespace Domain
 {
-    public class ApplicationUser : IdentityUser
+    public class ApplicationUser : IdentityUser, IEntity<string>
     {
         public string? FullName { get; set; }    
         public DateTime? DateOfBirth { get; set; }
