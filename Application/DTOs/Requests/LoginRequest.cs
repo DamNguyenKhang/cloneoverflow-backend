@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Application.DTOs
+namespace Application.DTOs.Requests
 {
-    public class LoginDTO
+    public class LoginRequest
     {
         [Required]
         public string UserName { get; set; } = string.Empty;

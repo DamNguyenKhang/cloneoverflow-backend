@@ -1,6 +1,6 @@
-﻿using Application.DTOs;
+﻿using Application.DTOs.Requests;
+using Application.Services.Interfaces;
 using Config;
-using Domain;
 using Domain.Entities;
 using Domain.Exceptions;
 using Domain.Interfaces;
@@ -15,7 +15,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
 
-namespace Application.Services
+namespace Application.Services.Impls
 {
     public class AccountService : IAccountService
     {
@@ -43,7 +43,7 @@ namespace Application.Services
             _logger = logger;
         }
 
-        public async Task<AuthResponse> LoginAsync(LoginDTO loginRequest)
+        public async Task<AuthResponse> LoginAsync(DTOs.Requests.LoginRequest loginRequest)
         {
             // Log user attempt
             _logger.LogInformation("Login attempt for username: {UserName}", loginRequest.UserName);
@@ -52,7 +52,7 @@ namespace Application.Services
 
             // Nếu user không tồn tại, vẫn check fake password để tránh timing attack
             if (user == null)
-            {
+            { 
                 _logger.LogWarning("Invalid login attempt - user not found: {UserName}", loginRequest.UserName);
 
                 // fake check passwork hash
@@ -83,7 +83,7 @@ namespace Application.Services
             return await CreateSuccessfulAuthResponse(user);
         }
 
-        public async Task<AuthResponse> RegisterAsync(RegisterDTO registerRequest)
+        public async Task<AuthResponse> RegisterAsync(DTOs.Requests.RegisterRequest registerRequest)
         {
             using var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
             try
@@ -137,7 +137,7 @@ namespace Application.Services
 
         public async Task<TokenResponse> RefreshTokenAsync(string refreshTokenStr)
         {
-            ArgumentNullException.ThrowIfNullOrEmpty(refreshTokenStr);
+            ArgumentException.ThrowIfNullOrEmpty(refreshTokenStr);
 
             UserRefreshToken? userRefreshToken = await _refreshTokenRepository.GetByTokenStringAsync(refreshTokenStr);
 
@@ -173,7 +173,7 @@ namespace Application.Services
         public async Task<bool> LogOutAsync(string refreshTokenStr)
         {
 
-            ArgumentNullException.ThrowIfNullOrEmpty(refreshTokenStr);
+            ArgumentException.ThrowIfNullOrEmpty(refreshTokenStr);
 
             UserRefreshToken? userRefreshToken = await _refreshTokenRepository.GetByTokenStringAsync(refreshTokenStr);
 
@@ -182,7 +182,7 @@ namespace Application.Services
                 throw new EntityNotFoundException("Refresh token is not found");
             }
 
-            await _refreshTokenRepository.Delete(userRefreshToken);
+            await _refreshTokenRepository.RemoveAsync(userRefreshToken);
 
             return await Task.FromResult(true);
         }
@@ -208,13 +208,13 @@ namespace Application.Services
             userRefreshToken.CreatedAt = DateTime.UtcNow;
             userRefreshToken.ExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpireDays);
 
-            return await _refreshTokenRepository.Update(userRefreshToken);
+            return await _refreshTokenRepository.UpdateAsync(userRefreshToken);
         }
 
         private async Task<UserRefreshToken> AddUserRefreshTokenToDatabaseAsync(ApplicationUser user)
         {
             string refreshToken = _jwtUtils.GenerateRefreshToken();
-            return await _refreshTokenRepository.Add(new UserRefreshToken
+            return await _refreshTokenRepository.AddAsync(new UserRefreshToken
             {
                 RefreshTokenString = refreshToken,
                 CreatedAt = DateTime.UtcNow,

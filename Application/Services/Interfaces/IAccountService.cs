@@ -1,16 +1,16 @@
-﻿using Application.DTOs;
+﻿using Application.DTOs.Requests;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.Services
+namespace Application.Services.Interfaces
 {
     public interface IAccountService
     {
-        public Task<AuthResponse> LoginAsync(LoginDTO loginRequest);
-        public Task<AuthResponse> RegisterAsync(RegisterDTO registerRequest);
+        public Task<AuthResponse> LoginAsync(LoginRequest loginRequest);
+        public Task<AuthResponse> RegisterAsync(RegisterRequest registerRequest);
         public Task<TokenResponse> RefreshTokenAsync(string refreshTokenStr);
         public Task<bool> LogOutAsync(string refreshTokenStr);
     }

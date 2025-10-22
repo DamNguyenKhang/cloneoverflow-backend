@@ -1,7 +1,8 @@
 ﻿using Domain.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using System.Runtime.CompilerServices;
 
-namespace Domain
+namespace Domain.Entities
 {
     public class ApplicationUser : IdentityUser, IEntity<string>
     {

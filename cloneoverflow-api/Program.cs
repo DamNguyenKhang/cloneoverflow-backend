@@ -1,7 +1,8 @@
-﻿
-using Application.Services;
+﻿using Application.Services.Impls;
+using Application.Services.Interfaces;
 using Config;
-using Domain;
+using Domain.Entities;
+using Domain.Exceptions;
 using Domain.Interfaces;
 using Infrastructure.AppDbContext;
 using Infrastructure.Repositories;
@@ -38,7 +39,7 @@ namespace cloneoverflow_api
 
             // Identity DB Context for injection
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")).UseLazyLoadingProxies());
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -105,6 +106,13 @@ namespace cloneoverflow_api
                     };
                 });
 
+            builder.Services.AddProblemDetails(configure =>
+               configure.CustomizeProblemDetails = context =>
+               {
+                   context.ProblemDetails.Extensions.TryAdd("requestId", context.HttpContext.TraceIdentifier);
+               }
+           );
+
             // DI
             builder.Services.AddSingleton<JwtUtils>();
             builder.Services.AddScoped<IAccountService, AccountService>();
@@ -115,11 +123,15 @@ namespace cloneoverflow_api
             builder.Services.AddScoped<IUserRefreshTokenRepository, UserRefreshTokenRepository>();
             //builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
+            builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+            builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 
-            builder.Logging.ClearProviders();
-            builder.Logging.AddConsole();
-            builder.Logging.AddDebug();
+            //builder.Services.AddAutoMapper(typeof(Profile));
+
+            //builder.Logging.ClearProviders();
+            //builder.Logging.AddConsole();
+            //builder.Logging.AddDebug();
 
             var app = builder.Build();
 
@@ -141,6 +153,7 @@ namespace cloneoverflow_api
 
             app.UseHttpsRedirection();
 
+            app.UseExceptionHandler();
             app.UseAuthentication();
 
             app.UseAuthorization();

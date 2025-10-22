@@ -1,5 +1,5 @@
-using Application.DTOs;
-using Application.Services;
+using Application.DTOs.Requests;
+using Application.Services.Interfaces;
 using Azure.Core;
 using Config;
 using Domain;
@@ -29,7 +29,7 @@ namespace cloneoverflow_api.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginDTO loginRequest)
+        public async Task<ActionResult> Login([FromBody] Application.DTOs.Requests.LoginRequest loginRequest)
         {
             AuthResponse res = await _accountService.LoginAsync(loginRequest);
 
@@ -44,7 +44,7 @@ namespace cloneoverflow_api.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterDTO registerRequest)
+        public async Task<ActionResult> Register([FromBody] Application.DTOs.Requests.RegisterRequest registerRequest)
         {
             AuthResponse res = await _accountService.RegisterAsync(registerRequest);
 
@@ -59,7 +59,7 @@ namespace cloneoverflow_api.Controllers
         }
 
         [HttpPost("refresh-token")]
-        public async Task<IActionResult> RefreshToken()
+        public async Task<ActionResult> RefreshToken()
         {
             var refreshTokenStr = Request.Cookies["refreshToken"];
 
@@ -72,7 +72,7 @@ namespace cloneoverflow_api.Controllers
         }
 
         [HttpPost("logout")]
-        public async Task<IActionResult> LogOut()
+        public async Task<ActionResult> LogOut()
         {
             var refreshTokenStr = Request.Cookies["refreshToken"];
             bool res = await _accountService.LogOutAsync(refreshTokenStr);

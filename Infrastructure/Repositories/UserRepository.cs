@@ -1,4 +1,4 @@
-﻿using Domain;
+﻿using Domain.Entities;
 using Domain.Interfaces;
 using Infrastructure.AppDbContext;
 using Microsoft.AspNetCore.Identity;

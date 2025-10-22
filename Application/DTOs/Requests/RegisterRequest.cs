@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Application.DTOs
+namespace Application.DTOs.Requests
 {
-    public class RegisterDTO
+    public class RegisterRequest
     {
         [Required]
         public string FullName { get; set; } = string.Empty;
@@ -11,7 +11,6 @@ namespace Application.DTOs
         public string UserName { get; set; } = string.Empty;
         public string? Email { get; set; }
 
-        [Required]
         public string Password { get; set; } = string.Empty;
     }
 
