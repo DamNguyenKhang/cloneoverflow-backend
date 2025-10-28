@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36518.9 d17.14
+VisualStudioVersion = 17.14.36518.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cloneoverflow-api", "cloneoverflow-api\cloneoverflow-api.csproj", "{66A2DECE-5FB7-495F-9A4D-273BF22884D1}"
 EndProject
@@ -12,6 +12,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{7E8BD62B-CF3F-4F93-8696-DA98E8F33C88}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application", "Application\Application.csproj", "{9031F6F2-1BB1-4550-AB37-1D50FB8D660E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{703A921E-8AB8-4DC2-97E1-98E6125CFE0D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{9031F6F2-1BB1-4550-AB37-1D50FB8D660E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9031F6F2-1BB1-4550-AB37-1D50FB8D660E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9031F6F2-1BB1-4550-AB37-1D50FB8D660E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{703A921E-8AB8-4DC2-97E1-98E6125CFE0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{703A921E-8AB8-4DC2-97E1-98E6125CFE0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{703A921E-8AB8-4DC2-97E1-98E6125CFE0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{703A921E-8AB8-4DC2-97E1-98E6125CFE0D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

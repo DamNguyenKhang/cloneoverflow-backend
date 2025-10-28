@@ -1,13 +1,14 @@
 ﻿using Application.Services.Impls;
 using Application.Services.Interfaces;
+using Common.Exceptions;
 using Config;
 using Domain.Entities;
-using Domain.Exceptions;
 using Domain.Interfaces;
 using Infrastructure.AppDbContext;
 using Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -35,6 +36,8 @@ namespace cloneoverflow_api
             // Add services to the container.
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
             builder.Services.AddOpenApi();
 
             // Identity DB Context for injection
@@ -102,6 +105,19 @@ namespace cloneoverflow_api
                                 context.Token = accessToken;
                             }
                             return Task.CompletedTask;
+                        },
+                        OnForbidden = async context =>
+                        {
+                            context.Response.StatusCode = (int)ErrorCode.UNAUTHORIZED.HttpStatusCode;
+                            var problem = new ProblemDetails
+                            {
+                                Status = context.Response.StatusCode,
+                                Title = "Forbidden",
+                                Detail = ErrorCode.UNAUTHORIZED.Message,
+                                Type = "Forbidden"
+                            };
+                            context.Response.ContentType = "application/json";
+                            await context.Response.WriteAsJsonAsync(problem);
                         }
                     };
                 });
@@ -118,6 +134,8 @@ namespace cloneoverflow_api
             builder.Services.AddScoped<IAccountService, AccountService>();
             builder.Services.AddScoped<ICookieService, CookieService>();
             builder.Services.AddScoped<IRoleService, RoleService>();
+            builder.Services.AddScoped<IUserService, UserService>();
+
 
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IUserRefreshTokenRepository, UserRefreshTokenRepository>();
@@ -127,7 +145,7 @@ namespace cloneoverflow_api
             builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 
-            //builder.Services.AddAutoMapper(typeof(Profile));
+            builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
             //builder.Logging.ClearProviders();
             //builder.Logging.AddConsole();
@@ -147,6 +165,8 @@ namespace cloneoverflow_api
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
+                app.UseSwagger();
+                app.UseSwaggerUI();
             }
 
             app.UseCors("AllowReact");

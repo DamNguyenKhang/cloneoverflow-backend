@@ -1,11 +1,10 @@
-﻿using Application.DTOs.Requests;
+﻿using Application.DTOs.Responses;
+using Application.DTOs.Requests;
 using Application.Services.Interfaces;
 using Config;
 using Domain.Entities;
-using Domain.Exceptions;
 using Domain.Interfaces;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -14,6 +13,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
+using Common.Exceptions;
 
 namespace Application.Services.Impls
 {
@@ -52,7 +52,7 @@ namespace Application.Services.Impls
 
             // Nếu user không tồn tại, vẫn check fake password để tránh timing attack
             if (user == null)
-            { 
+            {
                 _logger.LogWarning("Invalid login attempt - user not found: {UserName}", loginRequest.UserName);
 
                 // fake check passwork hash
@@ -61,11 +61,7 @@ namespace Application.Services.Impls
 
                 await Task.Delay(200);
 
-                return new AuthResponse
-                {
-                    IsSuccess = false,
-                    Message = "Invalid username or password."
-                };
+                throw new AppException(ErrorCode.UNAUTHENTICATED);
             }
 
             var signInResult = await _signInManager.PasswordSignInAsync(user, loginRequest.Password, isPersistent: false, lockoutOnFailure: false);
@@ -73,73 +69,56 @@ namespace Application.Services.Impls
             if (!signInResult.Succeeded)
             {
                 _logger.LogWarning("Invalid password attempt for user: {UserName}", loginRequest.UserName);
-                return new AuthResponse
-                {
-                    IsSuccess = false,
-                    Message = "Invalid username or password."
-                };
+                throw new AppException(ErrorCode.UNAUTHENTICATED);
             }
 
             return await CreateSuccessfulAuthResponse(user);
         }
 
-        public async Task<AuthResponse> RegisterAsync(DTOs.Requests.RegisterRequest registerRequest)
+        public async Task<AuthResponse> RegisterAsync(RegisterRequest registerRequest)
         {
             using var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
-            try
+            var existingUser = await _userManager.FindByNameAsync(registerRequest.UserName);
+            if (existingUser != null)
             {
-                var existingUser = await _userManager.FindByNameAsync(registerRequest.UserName);
-                if (existingUser != null)
-                {
-                    return new AuthResponse
-                    {
-                        IsSuccess = false,
-                        Message = "User already exists!"
-                    };
-                }
-
-                var newUser = new ApplicationUser
-                {
-                    UserName = registerRequest.UserName,
-                    FullName = registerRequest.FullName,
-                    Email = registerRequest.Email
-                };
-
-                var createResult = await _userManager.CreateAsync(newUser, registerRequest.Password);
-
-                if (!createResult.Succeeded)
-                {
-                    var errorMessage = string.Join(", ", createResult.Errors.Select(e => e.Description));
-                    return new AuthResponse
-                    {
-                        IsSuccess = false,
-                        Message = $"Registration failed: {errorMessage}"
-                    };
-                }
-
-                await _userManager.AddToRoleAsync(newUser, "User");
-
-                // sign in sau khi dang ky
-                await _signInManager.SignInAsync(newUser, isPersistent: false);
-
-                var response = await CreateSuccessfulAuthResponse(newUser);
-
-                scope.Complete();
-
-                return response;
+                throw new AppException(ErrorCode.USER_EXISTED);
             }
-            catch (Exception ex)
+
+            var newUser = new ApplicationUser
             {
-                _logger.LogError(ex, "Registration failed with exception for username: {UserName}", registerRequest.UserName);
-                throw;
+                UserName = registerRequest.UserName,
+                FullName = registerRequest.FullName,
+                Email = registerRequest.Email
+            };
+
+            var createResult = await _userManager.CreateAsync(newUser, registerRequest.Password);
+
+            if (!createResult.Succeeded)
+            {
+                var errorMessage = string.Join(", ", createResult.Errors.Select(e => e.Description));
+                throw new AppException(ErrorCode.REGISTER_FAILED, $"{errorMessage}");
             }
+
+            await _userManager.AddToRoleAsync(newUser, "User");
+
+            // sign in sau khi dang ky
+            await _signInManager.SignInAsync(newUser, isPersistent: false);
+
+            var response = await CreateSuccessfulAuthResponse(newUser);
+
+            scope.Complete();
+
+            return response;
         }
+
+
 
         public async Task<TokenResponse> RefreshTokenAsync(string refreshTokenStr)
         {
             ArgumentException.ThrowIfNullOrEmpty(refreshTokenStr);
 
-            UserRefreshToken? userRefreshToken = await _refreshTokenRepository.GetByTokenStringAsync(refreshTokenStr);
+            UserRefreshToken? userRefreshToken = await _refreshTokenRepository.GetAsync(predicate: (p => p.RefreshTokenString == refreshTokenStr),
+                                                                                        includes: r => r.User);
 
             if (userRefreshToken == null)
             {
@@ -149,12 +128,12 @@ namespace Application.Services.Impls
                 {
                     _logger.LogWarning("Refresh token is old => CO NGUOI VAO NICK NE {UserName}", oldRefreshToken.User.UserName);
                 }
-                throw new EntityNotFoundException("Refresh token is not found");
+                throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
             }
 
             if (userRefreshToken.IsExpired())
             {
-                throw new SecurityTokenException("Refresh token has expired");
+                throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
             }
 
             var roles = await _userManager.GetRolesAsync(userRefreshToken.User);
@@ -179,7 +158,7 @@ namespace Application.Services.Impls
 
             if (userRefreshToken == null)
             {
-                throw new EntityNotFoundException("Refresh token is not found");
+                throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
             }
 
             await _refreshTokenRepository.RemoveAsync(userRefreshToken);

@@ -1,17 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿using System.Linq.Expressions;
+using Common.Pagination;
 namespace Domain.Interfaces
 {
-    public interface IGenericRepository<T, TKey> where T : IEntity<TKey>
+    public interface IGenericRepository<T, TKey> where T : class, IEntity<TKey>
     {
         Task<IEnumerable<T>> GetAllAsync(
             Expression<Func<T, bool>> predicate,
+            params Expression<Func<T, object>>[] includes
+        );
+        Task<T?> GetAsync(
+            Expression<Func<T, bool>> predicate,
+            params Expression<Func<T, object>>[] includes
+        );
+
+        Task<PageResult<T>> GetPagedAsync(
+            Expression<Func<T, bool>>? predicate = null,
+            PageRequest? pageRequest = null,
             params Expression<Func<T, object>>[] includes
         );
         Task<T> AddAsync(T entity);
