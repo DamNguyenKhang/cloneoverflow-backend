@@ -26,7 +26,7 @@ namespace cloneoverflow_api
             {
                 options.AddPolicy("AllowReact", policy =>
                 {
-                    policy.WithOrigins("http://localhost:123")
+                    policy.WithOrigins("https://localhost:5173")
                           .AllowAnyHeader()
                           .AllowAnyMethod()
                           .AllowCredentials();
