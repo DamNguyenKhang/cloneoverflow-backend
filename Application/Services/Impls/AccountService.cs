@@ -169,6 +169,10 @@ namespace Application.Services.Impls
         private async Task<AuthResponse> CreateSuccessfulAuthResponse(ApplicationUser user)
         {
             var userRoles = await _userManager.GetRolesAsync(user);
+
+            // remove neu co refresh token cu
+            await _refreshTokenRepository.RemoveByUserIdAsync(user.Id);
+
             var userRefreshToken = await AddUserRefreshTokenToDatabaseAsync(user);
 
             return new AuthResponse

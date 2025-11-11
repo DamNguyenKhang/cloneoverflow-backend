@@ -24,9 +24,20 @@ namespace cloneoverflow_api
 
             builder.Services.AddCors(options =>
             {
+                //options.AddPolicy("AllowReact", policy =>
+                //{
+                //    policy.WithOrigins("https://localhost:5173")
+                //          .AllowAnyHeader()
+                //          .AllowAnyMethod()
+                //          .AllowCredentials();
+                //});
                 options.AddPolicy("AllowReact", policy =>
                 {
-                    policy.WithOrigins("https://localhost:5173")
+                    policy.SetIsOriginAllowed(origin =>
+                    {
+                        return origin.StartsWith("http://localhost")
+                               || origin.StartsWith("https://localhost");
+                    })
                           .AllowAnyHeader()
                           .AllowAnyMethod()
                           .AllowCredentials();

@@ -28,5 +28,10 @@ namespace Infrastructure.Repositories
             return await _dbSet.FirstOrDefaultAsync(rt => rt.ReplacedByToken == refreshTokenStr);
         }
 
+        public async Task RemoveByUserIdAsync(string userId)
+        {
+            await _dbSet.Where(rt => rt.UserId == userId).ExecuteDeleteAsync();
+        }
+
     }
 }

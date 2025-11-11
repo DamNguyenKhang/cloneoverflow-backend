@@ -11,5 +11,6 @@ namespace Domain.Interfaces
     {
         public Task<UserRefreshToken?> GetByOldTokenStringAsync(string refreshTokenStr);
         public Task<UserRefreshToken?> GetByTokenStringAsync(string refreshTokenStr);
+        public Task RemoveByUserIdAsync(string userId);
     }
 }

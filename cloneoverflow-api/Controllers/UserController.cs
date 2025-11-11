@@ -2,6 +2,7 @@
 using Application.DTOs.Responses;
 using Application.Services.Interfaces;
 using Common.Pagination;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -12,6 +13,7 @@ namespace cloneoverflow_api.Controllers
     public class UserController(IUserService _userService) : ControllerBase
     {
         [HttpGet("my-info")]
+        [Authorize]
         public async Task<ActionResult<ApiResponse<UserResponse>>> GetMyInfo()
         {
             //var user = _userManager.getUserAsync(User);

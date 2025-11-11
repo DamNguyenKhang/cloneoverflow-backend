@@ -6,6 +6,7 @@ using Application.Services.Interfaces;
 using Azure.Core;
 using Config;
 using Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -62,6 +63,7 @@ namespace cloneoverflow_api.Controllers
         }
 
         [HttpPost("refresh-token")]
+        [Authorize]
         public async Task<ActionResult<ApiResponse<bool>>> RefreshToken()
         {
             var refreshTokenStr = Request.Cookies["refreshToken"];
@@ -79,6 +81,7 @@ namespace cloneoverflow_api.Controllers
         }
 
         [HttpPost("logout")]
+        [Authorize]
         public async Task<ActionResult<ApiResponse<bool>>> LogOut()
         {
             var refreshTokenStr = Request.Cookies["refreshToken"];
