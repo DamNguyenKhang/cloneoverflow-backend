@@ -22,59 +22,63 @@ namespace cloneoverflow_api.Controllers
         private readonly IAccountService _accountService;
         private readonly ICookieService _cookieService;
 
-        private readonly JwtSettings _jwtSettings;
-
-
-        public AccountController(IAccountService accountService, ICookieService cookieService, JwtSettings jwtSettings)
+        public AccountController(IAccountService accountService, ICookieService cookieService)
         {
             _accountService = accountService;
             _cookieService = cookieService;
-
-            _jwtSettings = jwtSettings ?? throw new ArgumentNullException(nameof(jwtSettings));
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<ApiResponse<bool>>> Login([FromBody] LoginRequest loginRequest)
+        [AllowAnonymous]
+        public async Task<ActionResult<ApiResponse<Object>>> Login([FromBody] LoginRequest loginRequest)
         {
             AuthResponse res = await _accountService.LoginAsync(loginRequest);
-            _cookieService.SetCookie(Response, "accessToken", res.AccessToken, DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpireMinutes));
-            _cookieService.SetCookie(Response, "refreshToken", res.UserRefreshToken.RefreshTokenString, res.UserRefreshToken.ExpiresAt);
 
-            return Ok(new ApiResponse<bool>
+            if (res.IsSuccess)
             {
-                Result = true,
-                Message = "Login successfully"
+                _cookieService.SetCookie(Response, "refreshToken", res.UserRefreshToken.RefreshTokenString, res.UserRefreshToken.ExpiresAt);
+            }
+            else return Ok(new ApiResponse<bool>
+            {
+                Result = false,
+                Message = res.Message
             });
+
+            return Ok(new ApiResponse<Object>
+            {
+                Result = new { AccessToken = res.AccessToken },
+                Message = res.Message
+            });
+
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult<ApiResponse<bool>>> Register([FromBody] RegisterRequest registerRequest)
+        [AllowAnonymous]
+        public async Task<ActionResult<ApiResponse<Object>>> Register([FromBody] RegisterRequest registerRequest)
         {
             AuthResponse res = await _accountService.RegisterAsync(registerRequest);
 
-            _cookieService.SetCookie(Response, "accessToken", res.AccessToken, DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpireMinutes));
             _cookieService.SetCookie(Response, "refreshToken", res.UserRefreshToken.RefreshTokenString, res.UserRefreshToken.ExpiresAt);
 
-            return Ok(new ApiResponse<bool>
+            return Ok(new ApiResponse<Object>
             {
-                Result = true,
+                Result = new { AccessToken = res.AccessToken },
                 Message = "Register successfully"
             });
         }
 
         [HttpPost("refresh-token")]
-        [Authorize]
-        public async Task<ActionResult<ApiResponse<bool>>> RefreshToken()
+        [AllowAnonymous]
+        public async Task<ActionResult<ApiResponse<Object>>> RefreshToken()
         {
             var refreshTokenStr = Request.Cookies["refreshToken"];
 
             TokenResponse res = await _accountService.RefreshTokenAsync(refreshTokenStr);
-            _cookieService.SetCookie(Response, "accessToken", res.AccessToken, DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpireMinutes));
             _cookieService.SetCookie(Response, "refreshToken", res.UserRefreshToken.RefreshTokenString, res.UserRefreshToken.ExpiresAt);
 
-            return Ok(new ApiResponse<bool>
+            return Ok(new ApiResponse<Object>
             {
-                Result = true,
+                Result = new { AccessToken = res.AccessToken },
                 Message = "Refresh token successfully"
             });
 
@@ -87,8 +91,7 @@ namespace cloneoverflow_api.Controllers
             var refreshTokenStr = Request.Cookies["refreshToken"];
             bool res = await _accountService.LogOutAsync(refreshTokenStr);
 
-            _cookieService.SetCookie(Response, "accessToken", "", DateTime.UtcNow.AddMinutes(-1));
-            _cookieService.SetCookie(Response, "refreshToken", "", DateTime.UtcNow.AddMinutes(-1));
+            _cookieService.SetCookie(Response, "refreshToken", "", DateTime.Now.AddMinutes(-1));
 
             return Ok(new ApiResponse<bool>
             {

@@ -12,12 +12,12 @@ namespace Domain.Entities
         public Guid Id { get; set; } = Guid.NewGuid();
         public string RefreshTokenString { get; set; } = null!;
         public DateTime ExpiresAt { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
         public string? ReplacedByToken { get; set; }
 
         public string UserId { get; set; } = null!;
         public virtual ApplicationUser User { get; set; } = null!;
-        public bool IsExpired() => DateTime.UtcNow >= ExpiresAt;
+        public bool IsExpired() => DateTime.Now >= ExpiresAt;
 
     }
 }

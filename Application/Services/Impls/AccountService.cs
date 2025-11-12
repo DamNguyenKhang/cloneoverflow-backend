@@ -43,7 +43,7 @@ namespace Application.Services.Impls
             _logger = logger;
         }
 
-        public async Task<AuthResponse> LoginAsync(DTOs.Requests.LoginRequest loginRequest)
+        public async Task<AuthResponse> LoginAsync(LoginRequest loginRequest)
         {
             // Log user attempt
             _logger.LogInformation("Login attempt for username: {UserName}", loginRequest.UserName);
@@ -61,7 +61,11 @@ namespace Application.Services.Impls
 
                 await Task.Delay(200);
 
-                throw new AppException(ErrorCode.UNAUTHENTICATED);
+                return new AuthResponse
+                {
+                    IsSuccess = false,
+                    Message = "Invalid username or password"
+                };
             }
 
             var signInResult = await _signInManager.PasswordSignInAsync(user, loginRequest.Password, isPersistent: false, lockoutOnFailure: false);
@@ -69,7 +73,11 @@ namespace Application.Services.Impls
             if (!signInResult.Succeeded)
             {
                 _logger.LogWarning("Invalid password attempt for user: {UserName}", loginRequest.UserName);
-                throw new AppException(ErrorCode.UNAUTHENTICATED);
+                return new AuthResponse
+                {
+                    IsSuccess = false,
+                    Message = "Invalid username or password"
+                };
             }
 
             return await CreateSuccessfulAuthResponse(user);
@@ -115,7 +123,12 @@ namespace Application.Services.Impls
 
         public async Task<TokenResponse> RefreshTokenAsync(string refreshTokenStr)
         {
-            ArgumentException.ThrowIfNullOrEmpty(refreshTokenStr);
+            _logger.LogWarning("Refresh token requested: {RefreshToken}", refreshTokenStr);
+            if (refreshTokenStr == null)
+            {
+                _logger.LogWarning("Refresh token is null");
+                throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
+            }
 
             UserRefreshToken? userRefreshToken = await _refreshTokenRepository.GetAsync(predicate: (p => p.RefreshTokenString == refreshTokenStr),
                                                                                         includes: r => r.User);
@@ -133,6 +146,7 @@ namespace Application.Services.Impls
 
             if (userRefreshToken.IsExpired())
             {
+                _logger.LogWarning("Refresh token is expired for user: {UserName}", userRefreshToken.User.UserName);    
                 throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
             }
 
@@ -188,8 +202,8 @@ namespace Application.Services.Impls
         {
             userRefreshToken.ReplacedByToken = userRefreshToken.RefreshTokenString;
             userRefreshToken.RefreshTokenString = _jwtUtils.GenerateRefreshToken();
-            userRefreshToken.CreatedAt = DateTime.UtcNow;
-            userRefreshToken.ExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpireDays);
+            userRefreshToken.CreatedAt = DateTime.Now;
+            userRefreshToken.ExpiresAt = DateTime.Now.AddDays(_jwtSettings.RefreshTokenExpireDays);
 
             return await _refreshTokenRepository.UpdateAsync(userRefreshToken);
         }
@@ -200,8 +214,8 @@ namespace Application.Services.Impls
             return await _refreshTokenRepository.AddAsync(new UserRefreshToken
             {
                 RefreshTokenString = refreshToken,
-                CreatedAt = DateTime.UtcNow,
-                ExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpireDays),
+                CreatedAt = DateTime.Now,
+                ExpiresAt = DateTime.Now.AddDays(_jwtSettings.RefreshTokenExpireDays),
                 UserId = user.Id,
                 User = user
             });

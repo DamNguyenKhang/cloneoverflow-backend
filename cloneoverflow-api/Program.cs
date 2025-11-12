@@ -108,15 +108,6 @@ namespace cloneoverflow_api
                     };
                     op.Events = new JwtBearerEvents
                     {
-                        OnMessageReceived = context =>
-                        {
-                            var accessToken = context.Request.Cookies["accessToken"];
-                            if (!string.IsNullOrEmpty(accessToken))
-                            {
-                                context.Token = accessToken;
-                            }
-                            return Task.CompletedTask;
-                        },
                         OnForbidden = async context =>
                         {
                             context.Response.StatusCode = (int)ErrorCode.UNAUTHORIZED.HttpStatusCode;

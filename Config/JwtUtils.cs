@@ -28,7 +28,6 @@ namespace Config
             if (string.IsNullOrEmpty(userName)) throw new ArgumentException("Username cannot be null or empty.", nameof(userName));
             if (roles == null || !roles.Any()) throw new ArgumentException("Roles cannot be null or empty.", nameof(roles));
 
-            _logger.LogInformation("JWT Key length: {Length}", _jwtSettings.Key?.Length);
             if (_jwtSettings.Key.Length < 32)
                 throw new InvalidOperationException("JWT Key must be at least 32 characters long.");
 
@@ -50,7 +49,7 @@ namespace Config
                 issuer: _jwtSettings.Issuer,
                 audience: _jwtSettings.Audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpireMinutes),
+                expires: DateTime.Now.AddMinutes(_jwtSettings.AccessTokenExpireMinutes),
                 signingCredentials: creds
             );
 
