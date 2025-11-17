@@ -20,9 +20,7 @@ namespace Application.Services.Impls
     public class AccountService : IAccountService
     {
 
-        private readonly IUserRepository _userRepository;
-        private readonly IUserRefreshTokenRepository _refreshTokenRepository;
-
+        private readonly ITokenService _tokenService;
 
         private readonly JwtUtils _jwtUtils;
         private readonly JwtSettings _jwtSettings;
@@ -32,13 +30,12 @@ namespace Application.Services.Impls
         private readonly SignInManager<ApplicationUser> _signInManager;
 
 
-        public AccountService(IUserRepository userRepository, JwtUtils jwtUtils, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IUserRefreshTokenRepository refreshTokenRepository, JwtSettings jwtSettings, ILogger<AccountService> logger)
+        public AccountService(ITokenService tokenService, JwtUtils jwtUtils, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, JwtSettings jwtSettings, ILogger<AccountService> logger)
         {
-            _userRepository = userRepository;
+            _tokenService = tokenService;
             _jwtUtils = jwtUtils;
             _userManager = userManager;
             _signInManager = signInManager;
-            _refreshTokenRepository = refreshTokenRepository;
             _jwtSettings = jwtSettings;
             _logger = logger;
         }
@@ -130,12 +127,11 @@ namespace Application.Services.Impls
                 throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
             }
 
-            UserRefreshToken? userRefreshToken = await _refreshTokenRepository.GetAsync(predicate: (p => p.RefreshTokenString == refreshTokenStr),
-                                                                                        includes: r => r.User);
+            UserRefreshToken? userRefreshToken = await _tokenService.GetRefreshTokenAsync(p => p.RefreshTokenString == refreshTokenStr);
 
             if (userRefreshToken == null)
             {
-                UserRefreshToken? oldRefreshToken = await _refreshTokenRepository.GetByOldTokenStringAsync(refreshTokenStr);
+                UserRefreshToken? oldRefreshToken = await _tokenService.GetRefreshTokenByOldTokenStringAsync(refreshTokenStr);
 
                 if (oldRefreshToken != null)
                 {
@@ -146,7 +142,7 @@ namespace Application.Services.Impls
 
             if (userRefreshToken.IsExpired())
             {
-                _logger.LogWarning("Refresh token is expired for user: {UserName}", userRefreshToken.User.UserName);    
+                _logger.LogWarning("Refresh token is expired for user: {UserName}", userRefreshToken.User.UserName);
                 throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
             }
 
@@ -163,19 +159,16 @@ namespace Application.Services.Impls
             };
         }
 
-        public async Task<bool> LogOutAsync(string refreshTokenStr)
+        public async Task<bool> LogOutAsync(string accessToken)
         {
 
-            ArgumentException.ThrowIfNullOrEmpty(refreshTokenStr);
-
-            UserRefreshToken? userRefreshToken = await _refreshTokenRepository.GetByTokenStringAsync(refreshTokenStr);
-
-            if (userRefreshToken == null)
+            await _tokenService.InvalidAccessToken(new InvalidToken
             {
-                throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
-            }
+                Token = accessToken,
+                ExpiredAt = _jwtUtils.GetAccessTokenExpiredTime(accessToken)
+            });
 
-            await _refreshTokenRepository.RemoveAsync(userRefreshToken);
+            await _tokenService.RemoveAllRefreshTokenOfUserAsync(accessToken);
 
             return await Task.FromResult(true);
         }
@@ -185,7 +178,7 @@ namespace Application.Services.Impls
             var userRoles = await _userManager.GetRolesAsync(user);
 
             // remove neu co refresh token cu
-            await _refreshTokenRepository.RemoveByUserIdAsync(user.Id);
+            await _tokenService.RemoveRefreshTokenByUserIdAsync(user.Id);
 
             var userRefreshToken = await AddUserRefreshTokenToDatabaseAsync(user);
 
@@ -202,20 +195,20 @@ namespace Application.Services.Impls
         {
             userRefreshToken.ReplacedByToken = userRefreshToken.RefreshTokenString;
             userRefreshToken.RefreshTokenString = _jwtUtils.GenerateRefreshToken();
-            userRefreshToken.CreatedAt = DateTime.Now;
-            userRefreshToken.ExpiresAt = DateTime.Now.AddDays(_jwtSettings.RefreshTokenExpireDays);
+            userRefreshToken.CreatedAt = DateTime.UtcNow;
+            userRefreshToken.ExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpireDays);
 
-            return await _refreshTokenRepository.UpdateAsync(userRefreshToken);
+            return await _tokenService.UpdateRefreshTokenAsync(userRefreshToken);
         }
 
         private async Task<UserRefreshToken> AddUserRefreshTokenToDatabaseAsync(ApplicationUser user)
         {
             string refreshToken = _jwtUtils.GenerateRefreshToken();
-            return await _refreshTokenRepository.AddAsync(new UserRefreshToken
+            return await _tokenService.AddRefreshTokenAsync(new UserRefreshToken
             {
                 RefreshTokenString = refreshToken,
-                CreatedAt = DateTime.Now,
-                ExpiresAt = DateTime.Now.AddDays(_jwtSettings.RefreshTokenExpireDays),
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpireDays),
                 UserId = user.Id,
                 User = user
             });

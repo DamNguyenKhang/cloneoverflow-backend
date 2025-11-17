@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
 namespace cloneoverflow_api
@@ -108,6 +109,20 @@ namespace cloneoverflow_api
                     };
                     op.Events = new JwtBearerEvents
                     {
+                        OnTokenValidated = async context =>
+                        {
+                            var tokenService = context.HttpContext.RequestServices.GetRequiredService<ITokenService>();
+
+                            var handler = context.HttpContext.RequestServices.GetRequiredService<JwtSecurityTokenHandler>();
+
+                            var jwtToken = JwtUtils.ParseAccessTokenFromHeader(context.Request.Headers.Authorization.ToString());
+
+                            if (await tokenService.IsTokenInvalidAsync(jwtToken))
+                            {
+                                context.Fail("Token revoked");
+                            }
+                        },
+
                         OnForbidden = async context =>
                         {
                             context.Response.StatusCode = (int)ErrorCode.UNAUTHORIZED.HttpStatusCode;
@@ -132,26 +147,27 @@ namespace cloneoverflow_api
            );
 
             // DI
-            builder.Services.AddSingleton<JwtUtils>();
+            builder.Services.AddScoped<JwtUtils>(); // khong dung singleton vi co the su dung services khac ben trong
+
             builder.Services.AddScoped<IAccountService, AccountService>();
+            builder.Services.AddScoped<ITokenService, TokenService>();
             builder.Services.AddScoped<ICookieService, CookieService>();
             builder.Services.AddScoped<IRoleService, RoleService>();
             builder.Services.AddScoped<IUserService, UserService>();
 
-
+            builder.Services.AddScoped<ITokenInvalidRepository, TokenInvalidRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IUserRefreshTokenRepository, UserRefreshTokenRepository>();
             //builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+
+            builder.Services.AddSingleton<JwtSecurityTokenHandler>();
+
 
             builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
             builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-
-            //builder.Logging.ClearProviders();
-            //builder.Logging.AddConsole();
-            //builder.Logging.AddDebug();
 
             var app = builder.Build();
 

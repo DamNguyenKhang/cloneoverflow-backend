@@ -88,10 +88,11 @@ namespace cloneoverflow_api.Controllers
         [Authorize]
         public async Task<ActionResult<ApiResponse<bool>>> LogOut()
         {
-            var refreshTokenStr = Request.Cookies["refreshToken"];
-            bool res = await _accountService.LogOutAsync(refreshTokenStr);
+            var accessToken = JwtUtils.ParseAccessTokenFromHeader(Request.Headers.Authorization.ToString());
 
-            _cookieService.SetCookie(Response, "refreshToken", "", DateTime.Now.AddMinutes(-1));
+            bool res = await _accountService.LogOutAsync(accessToken);
+
+            _cookieService.SetCookie(Response, "refreshToken", "", DateTime.UtcNow.AddMinutes(-1));
 
             return Ok(new ApiResponse<bool>
             {

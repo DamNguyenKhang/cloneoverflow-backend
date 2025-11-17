@@ -13,6 +13,6 @@ namespace Application.Services.Interfaces
         public Task<AuthResponse> LoginAsync(LoginRequest loginRequest);
         public Task<AuthResponse> RegisterAsync(RegisterRequest registerRequest);
         public Task<TokenResponse> RefreshTokenAsync(string refreshTokenStr);
-        public Task<bool> LogOutAsync(string refreshTokenStr);
+        public Task<bool> LogOutAsync(string accessToken);
     }
 }
